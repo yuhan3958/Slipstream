@@ -48,5 +48,8 @@ bin/
 *.p12
 *.pfx
 
+### local environment ###
+.env
+
 ### downloads ###
 downloads/

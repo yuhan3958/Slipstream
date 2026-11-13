@@ -36,18 +36,21 @@ keytool -genkeypair `
 
 ## 실행
 
-Gradle의 `application.run` 작업은 기본적으로 `keystore.p12`와 `change-this-password`를 환경 변수로 자동 주입합니다. 따라서 예시 키스토어를 만들었다면 바로 실행할 수 있습니다.
+`.env.example`을 복사해 로컬 `.env` 파일을 만들고 키스토어 정보를 입력합니다. `.env`는 Git에서 제외됩니다.
+
+```powershell
+Copy-Item .env.example .env
+```
+
+```dotenv
+SLIPSTREAM_KEYSTORE=keystore.p12
+SLIPSTREAM_KEYSTORE_PASSWORD=change-this-password
+```
+
+Gradle의 `application.run` 작업은 이 두 값을 자동으로 환경 변수로 주입합니다.
 
 ```powershell
 .\gradlew.bat run
-```
-
-키스토어 경로나 비밀번호가 다르면 Gradle 속성으로 재정의합니다.
-
-```powershell
-.\gradlew.bat run `
-  -PslipstreamKeystore="C:\path\to\certificate.p12" `
-  -PslipstreamKeystorePassword="your-password"
 ```
 
 IntelliJ IDEA에서는 Gradle 창의 `Tasks > application > run`을 실행하면 됩니다.
