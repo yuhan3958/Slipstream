@@ -1,6 +1,7 @@
 package me.yuhan8954.slipstream;
 
 import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpsConfigurator;
 import com.sun.net.httpserver.HttpsServer;
 
@@ -131,7 +132,7 @@ public class Slipstream {
             <body>
               <main>
                 <h1>Slipstream</h1>
-                <p class="subtitle">Send files across your local network.</p>
+                <p class="subtitle">Send files across your network or the internet.</p>
             
                 <div class="dropzone" id="dropzone">
                   <strong>파일 선택</strong>
@@ -146,7 +147,7 @@ public class Slipstream {
                 <div id="status">파일을 선택해 주세요.</div>
             
                 <div class="footer">
-                  Slipstream v0.1 · Local Transfer
+                  Slipstream · File Transfer
                 </div>
               </main>
             
@@ -306,8 +307,27 @@ public class Slipstream {
         System.out.println("Open on your phone:");
 
         List<String> addresses = getAddresses();
+        HttpServer internetOrigin = null;
+        if (Arrays.asList(args).contains("--internet")) {
+            internetOrigin = HttpServer.create(new InetSocketAddress("127.0.0.1", 8788), 0);
+            internetOrigin.createContext("/", Slipstream::handleIndex);
+            internetOrigin.createContext("/api/upload", Slipstream::handleUpload);
+            internetOrigin.setExecutor(executor);
+            internetOrigin.start();
+            try {
+                String publicUrl = InternetTunnel.start();
+                addresses.add(publicUrl + "/?token=" + TOKEN);
+            } catch (Exception e) {
+                internetOrigin.stop(0);
+                internetOrigin = null;
+                System.err.println("Internet tunnel unavailable; LAN remains active: " + e.getMessage());
+            }
+        }
+        HttpServer origin = internetOrigin;
         addresses.forEach(System.out::println);
         SlipstreamControlWindow.show(addresses, DOWNLOAD_DIR, () -> {
+            InternetTunnel.stop();
+            if (origin != null) origin.stop(0);
             server.stop(0);
             executor.shutdownNow();
             System.exit(0);
@@ -389,7 +409,7 @@ public class Slipstream {
         }
 
         httpExchange.getResponseHeaders().set("Content-Type", "text/html; charset=utf-8");
-        httpExchange.getResponseHeaders().set("Referer-Policy", "no-referer");
+        httpExchange.getResponseHeaders().set("Referrer-Policy", "no-referer");
         httpExchange.getResponseHeaders().set("Cache-Control", "no-store");
 
         byte[] content = HTML.getBytes(StandardCharsets.UTF_8);
@@ -447,6 +467,7 @@ public class Slipstream {
 
         Path destination = DOWNLOAD_DIR.resolve(storedName);
 
+        long limit = exchange.getLocalAddress().getPort() == 8788 ? 95L * 1024 * 1024 : MAX_FILE_SIZE;
         long totalBytes = 0;
         boolean completed = false;
 
@@ -462,7 +483,7 @@ public class Slipstream {
                 int count;
 
                 while ((count = input.read(buffer)) != -1) {
-                    if (totalBytes > MAX_FILE_SIZE - count) {
+                    if (totalBytes > limit - count) {
                         send(exchange, 413, "File too large");
                         return;
                     }

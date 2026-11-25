@@ -43,7 +43,7 @@ public final class SlipstreamControlWindow {
 
         JPanel topPanel = new JPanel(new BorderLayout(8, 8));
         topPanel.setBorder(BorderFactory.createEmptyBorder(12, 12, 0, 12));
-        topPanel.add(new JLabel("Local HTTPS address:"), BorderLayout.WEST);
+        topPanel.add(new JLabel("Transfer address:"), BorderLayout.WEST);
         topPanel.add(addressSelector, BorderLayout.CENTER);
 
         urlLabel.setBorder(BorderFactory.createEmptyBorder(0, 16, 8, 16));

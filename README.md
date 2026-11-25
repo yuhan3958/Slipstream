@@ -66,7 +66,7 @@ IntelliJ IDEA에서는 Gradle 창의 `Tasks > application > run`을 실행하면
 ## 보안 메모
 
 - QR URL에는 실행할 때마다 새로 생성되는 접근 토큰이 들어 있습니다. 이 URL을 신뢰할 수 없는 사람과 공유하지 마세요.
-- 서버는 로컬 네트워크 전송 용도입니다. 인터넷에 포트를 노출하지 마세요.
+- 기본 모드는 LAN 전용입니다. PC의 HTTPS 포트를 직접 인터넷에 노출하지 마세요.
 - HTTPS를 쓰더라도 자체 서명 인증서는 신뢰 체인을 제공하지 않습니다. 실사용 환경에서는 신뢰할 수 있는 인증서를 사용하세요.
 
 ## 프로젝트 구성
@@ -77,3 +77,13 @@ src/main/java/me/yuhan8954/slipstream/
 ├── SlipstreamControlWindow.java # 주소/QR/서버 제어 UI
 └── QrPopupViewer.java           # QR 이미지 생성 도우미
 ```
+
+## 실험적 인터넷 모드
+
+cloudflared 실행 파일을 설치하고 PATH에 추가한 뒤 기존 키스토어 설정을 유지하고 실행합니다.
+
+```powershell
+.\gradlew.bat run --args="--internet"
+```
+
+주소 목록에서 임시 trycloudflare.com 주소를 선택하고 다른 네트워크의 휴대폰에서 QR을 스캔합니다. 포트포워딩은 필요하지 않습니다. 인터넷 모드는 파일당 95 MiB로 제한되며 LAN은 기존 2 GiB를 유지합니다. Quick Tunnel은 테스트용이며 가용성 보장이 없고 Cloudflare에서 TLS가 종료되므로 종단간 암호화가 아닙니다. 신뢰할 수 있는 사람에게만 QR을 공유하세요. 종료 시 터널도 종료됩니다. 터널 시작 실패 시 LAN 모드를 유지합니다. WebRTC 및 TURN은 아직 구현되지 않았습니다.
